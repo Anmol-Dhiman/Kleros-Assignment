@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import {LinearBondedCurve} from "../src/SolidityHackingWorkshopV8.sol";
 
-contract CounterTest is Test {
+contract Exercise7_LinearBondedCurve is Test {
     LinearBondedCurve public curve;
 
     /**
