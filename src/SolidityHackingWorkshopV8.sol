@@ -314,7 +314,7 @@ contract Resolver {
         B
     }
 
-    address payable public owner = msg.sender;
+    address payable public owner = payable(msg.sender);
     address payable[2] public sides;
 
     uint256 public baseDeposit;
